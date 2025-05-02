@@ -1,9 +1,3 @@
-# 🔍 k8s-node-inspector status
-
-[![Run Inspector CI](https://github.com/mrhits777/k8s-node-inspector/actions/workflows/run-inspector.yml/badge.svg)](https://github.com/mrhits777/k8s-node-inspector/actions/workflows/run-inspector.yml)
-
-A battle-tested, enterprise-grade Kubernetes node audit script...
-
 
 # 🔍 k8s-node-inspector
 
