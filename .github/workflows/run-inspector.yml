@@ -1,0 +1,69 @@
+name: Run k8s-node-inspector in Kind
+
+on:
+  push:
+    paths:
+      - "k8s-node-inspector.sh"
+      - ".github/workflows/run-inspector.yml"
+  pull_request:
+    paths:
+      - "k8s-node-inspector.sh"
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - name: 🧾 Checkout code
+        uses: actions/checkout@v3
+
+      - name: 🐳 Install Kind
+        run: |
+          curl -Lo ./kind https://kind.sigs.k8s.io/dl/v0.22.0/kind-linux-amd64
+          chmod +x ./kind
+          sudo mv ./kind /usr/local/bin/kind
+
+      - name: 📦 Install kubectl
+        run: |
+          curl -LO "https://dl.k8s.io/release/$(curl -s https://dl.k8s.io/release/stable.txt)/bin/linux/amd64/kubectl"
+          chmod +x kubectl
+          sudo mv kubectl /usr/local/bin/
+
+      - name: 📊 Install jq
+        run: sudo apt-get update && sudo apt-get install -y jq
+
+      - name: 🚀 Create Kind cluster
+        run: kind create cluster --name ci-test-cluster
+
+      - name: 🧪 Deploy test workload
+        run: |
+          kubectl apply -f - <<EOF
+          apiVersion: apps/v1
+          kind: Deployment
+          metadata:
+            name: dummy
+          spec:
+            replicas: 1
+            selector:
+              matchLabels:
+                app: dummy
+            template:
+              metadata:
+                labels:
+                  app: dummy
+              spec:
+                containers:
+                - name: pause
+                  image: k8s.gcr.io/pause:3.9
+          EOF
+
+      - name: 🔍 Run k8s-node-inspector.sh
+        run: |
+          chmod +x k8s-node-inspector.sh
+          ./k8s-node-inspector.sh
+
+      - name: 📁 Upload audit log artifact (optional)
+        if: success()
+        uses: actions/upload-artifact@v3
+        with:
+          name: node-audit-log
+          path: k8s_node_audit_*.log
